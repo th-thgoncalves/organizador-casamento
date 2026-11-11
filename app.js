@@ -1,5 +1,5 @@
 // COLE O SEU LINK AQUI (com as aspas no final!)
-const URL_GOOGLE_SHEETS = "COLE_AQUI_O_SEU_LINK";
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
 
 let dadosApp = { config: {}, categorias: [], contas: [] };
 
