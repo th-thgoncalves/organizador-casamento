@@ -1,23 +1,18 @@
-// COLE O SEU LINK AQUI (Não esqueça das aspas no final!)
-const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
+// COLE O SEU LINK AQUI (com as aspas no final!)
+const URL_GOOGLE_SHEETS = "COLE_AQUI_O_SEU_LINK";
 
 let dadosApp = { config: {}, categorias: [], contas: [] };
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarContagemRegressiva();
     carregarDados();
-    
     document.getElementById("form-categoria").addEventListener("submit", salvarCategoria);
     document.getElementById("form-conta").addEventListener("submit", salvarConta);
 });
 
 function abrirAba(idAba) {
-    const abas = document.querySelectorAll(".aba-conteudo");
-    abas.forEach(aba => aba.style.display = "none");
-
-    const botoes = document.querySelectorAll("nav button");
-    botoes.forEach(btn => btn.classList.remove("aba-ativa"));
-
+    document.querySelectorAll(".aba-conteudo").forEach(aba => aba.style.display = "none");
+    document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("aba-ativa"));
     document.getElementById(`aba-${idAba}`).style.display = "block";
     event.target.classList.add("aba-ativa");
 }
@@ -27,17 +22,10 @@ function iniciarContagemRegressiva() {
     const intervalo = setInterval(() => {
         const agora = new Date().getTime();
         const diferenca = dataCasamento - agora;
-
-        if (diferenca < 0) {
-            clearInterval(intervalo);
-            document.getElementById("contagem-regressiva").innerHTML = "O grande dia chegou! 🎉";
-            return;
-        }
-
+        if (diferenca < 0) { clearInterval(intervalo); return; }
         const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
-
         document.getElementById("contagem-regressiva").innerHTML = `Faltam ${dias}d ${horas}h ${minutos}m`;
     }, 1000);
 }
@@ -45,45 +33,34 @@ function iniciarContagemRegressiva() {
 async function carregarDados() {
     try {
         const resposta = await fetch(`${URL_GOOGLE_SHEETS}?action=getDados`);
-        const dados = await resposta.json();
-        dadosApp = dados;
+        dadosApp = await resposta.json();
         atualizarTela();
-    } catch (erro) {
-        console.error("Erro ao carregar dados:", erro);
-    }
+    } catch (erro) { console.error("Erro:", erro); }
 }
 
 function atualizarTela() {
     const teto = parseFloat(dadosApp.config.Teto_Gastos) || 0;
     let totalPago = 0;
-    
-    // Garante que categorias existe antes de tentar ler
-    if (dadosApp.categorias && Array.isArray(dadosApp.categorias)) {
-        dadosApp.categorias.forEach(cat => {
-            totalPago += parseFloat(cat.pago) || 0;
-        });
-    }
-
-    const saldo = teto - totalPago;
+    if (dadosApp.categorias) dadosApp.categorias.forEach(cat => totalPago += parseFloat(cat.pago) || 0);
 
     document.getElementById("teto-gastos").innerText = formatarMoeda(teto);
     document.getElementById("total-comprometido").innerText = formatarMoeda(totalPago);
-    document.getElementById("saldo-disponivel").innerText = formatarMoeda(saldo);
-    
+    const saldo = teto - totalPago;
     const elSaldo = document.getElementById("saldo-disponivel");
-    if (saldo < 0) { elSaldo.className = "texto-vermelho"; } else { elSaldo.className = "texto-verde"; }
+    elSaldo.innerText = formatarMoeda(saldo);
+    elSaldo.className = saldo < 0 ? "texto-vermelho" : "texto-verde";
 
     let porcentagem = (totalPago / teto) * 100;
     if (porcentagem > 100) porcentagem = 100;
     document.getElementById("barra-progresso").style.width = `${porcentagem}%`;
 
-    // Lista de Categorias COM BOTÃO EXCLUIR
+    // RENDERIZAR CATEGORIAS
     const listaCat = document.getElementById("lista-categorias");
     listaCat.innerHTML = ""; 
     const selectCat = document.getElementById("conta-categoria");
     selectCat.innerHTML = "<option value=''>Selecione...</option>";
 
-    if (dadosApp.categorias && Array.isArray(dadosApp.categorias)) {
+    if (dadosApp.categorias) {
         dadosApp.categorias.forEach(cat => {
             listaCat.innerHTML += `
                 <div class="item-card">
@@ -94,101 +71,164 @@ function atualizarTela() {
                     <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
                         <strong>Pago: ${formatarMoeda(cat.pago)}</strong>
                         <span>Est: ${formatarMoeda(cat.estimado)}</span>
-                        <button onclick="excluirCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-top:5px;" title="Excluir">🗑️</button>
+                        <div>
+                            <button onclick="abrirModalCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
+                            <button onclick="excluirCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             selectCat.innerHTML += `<option value="${cat.categoria}">${cat.categoria}</option>`;
         });
     }
 
-    // Lista de Contas
+    // RENDERIZAR CONTAS
     const listaContas = document.getElementById("lista-contas");
     listaContas.innerHTML = "";
-    
-    if (dadosApp.contas && Array.isArray(dadosApp.contas)) {
-        const contasOrdenadas = dadosApp.contas.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
-
-        contasOrdenadas.forEach(conta => {
+    if (dadosApp.contas) {
+        dadosApp.contas.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento)).forEach(conta => {
             let dataFormatada = "Data Inválida";
             if(conta.vencimento) {
                 const dataObj = new Date(conta.vencimento);
-                // Ajuste para evitar erro de fuso horário na formatação
                 dataFormatada = new Date(dataObj.getTime() + dataObj.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
             }
-
+            const corBorda = conta.status === "Pago" ? "#2ecc71" : "#f39c12";
+            
             listaContas.innerHTML += `
-                <div class="item-card" style="border-left-color: #f39c12;">
+                <div class="item-card" style="border-left-color: ${corBorda};">
                     <div class="item-info">
                         <h4>${conta.desc}</h4>
                         <p>Vence: ${dataFormatada} | Parcela ${conta.parcelaAtual}/${conta.totalParcelas}</p>
                     </div>
-                    <div class="item-valores">
+                    <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
                         <strong>${formatarMoeda(conta.valor)}</strong>
-                        <span>${conta.status}</span>
+                        <span style="color: ${corBorda}; font-weight: bold;">${conta.status}</span>
+                        <div>
+                            <button onclick="abrirModalConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
+                            <button onclick="excluirConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     }
+}
+
+// --- FUNÇÕES DE CATEGORIA ---
+function abrirModalCategoria(id = null) {
+    document.getElementById("form-categoria").reset();
+    document.getElementById("cat-id").value = "";
+    document.getElementById("titulo-modal-categoria").innerText = "Nova Categoria";
+
+    if (id) {
+        const cat = dadosApp.categorias.find(c => c.id == id);
+        if (cat) {
+            document.getElementById("titulo-modal-categoria").innerText = "Editar Categoria";
+            document.getElementById("cat-id").value = cat.id;
+            document.getElementById("cat-nome").value = cat.categoria;
+            document.getElementById("cat-estimado").value = cat.estimado;
+            document.getElementById("cat-pago").value = cat.pago;
+            document.getElementById("cat-status").value = cat.status;
+        }
+    }
+    document.getElementById("modal-categoria").style.display = "flex";
 }
 
 async function salvarCategoria(e) {
     e.preventDefault();
-    const nome = document.getElementById("cat-nome").value;
-    const estimado = document.getElementById("cat-estimado").value;
+    const id = document.getElementById("cat-id").value;
+    const dadosEnvio = {
+        action: id ? "updateCategoria" : "addCategoria",
+        id: id,
+        nome: document.getElementById("cat-nome").value,
+        estimado: document.getElementById("cat-estimado").value,
+        pago: document.getElementById("cat-pago").value,
+        status: document.getElementById("cat-status").value
+    };
 
-    await fetch(URL_GOOGLE_SHEETS, {
-        method: 'POST',
-        body: JSON.stringify({ action: "addCategoria", nome: nome, estimado: estimado })
-    });
+    await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify(dadosEnvio) });
     fecharModal('modal-categoria');
-    document.getElementById("form-categoria").reset();
     carregarDados(); 
 }
 
-// NOVA FUNÇÃO: EXCLUIR CATEGORIA
 async function excluirCategoria(id) {
-    if (confirm("Tem certeza que deseja excluir esta categoria? Os valores serão apagados.")) {
-        await fetch(URL_GOOGLE_SHEETS, {
-            method: 'POST',
-            body: JSON.stringify({ action: "deleteCategoria", id: id })
-        });
+    if (confirm("Excluir esta categoria?")) {
+        await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify({ action: "deleteCategoria", id: id }) });
         carregarDados();
     }
 }
 
+// --- FUNÇÕES DE CONTA ---
+function abrirModalConta(id = null) {
+    document.getElementById("form-conta").reset();
+    document.getElementById("conta-id").value = "";
+    document.getElementById("titulo-modal-conta").innerText = "Nova Conta a Pagar";
+    
+    // Mostra opções de parcelamento e valor total (só para contas novas)
+    document.getElementById("div-valor-total").style.display = "block";
+    document.getElementById("div-parcelamento").style.display = "block";
+    document.getElementById("conta-valor").required = true;
+
+    if (id) {
+        const conta = dadosApp.contas.find(c => c.id == id);
+        if (conta) {
+            document.getElementById("titulo-modal-conta").innerText = "Editar Conta";
+            document.getElementById("conta-id").value = conta.id;
+            document.getElementById("conta-desc").value = conta.desc;
+            document.getElementById("conta-categoria").value = conta.cat;
+            document.getElementById("conta-data").value = conta.vencimento;
+            document.getElementById("conta-status").value = conta.status;
+            
+            // Esconde opções que não devem ser editadas numa parcela específica
+            document.getElementById("div-valor-total").style.display = "none";
+            document.getElementById("div-parcelamento").style.display = "none";
+            document.getElementById("conta-valor").required = false;
+        }
+    }
+    document.getElementById("modal-conta").style.display = "flex";
+}
+
 async function salvarConta(e) {
     e.preventDefault();
-    const desc = document.getElementById("conta-desc").value;
-    const categoria = document.getElementById("conta-categoria").value;
-    const valorTotal = document.getElementById("conta-valor").value;
-    const dataVenc = document.getElementById("conta-data").value;
-    const parcelado = document.getElementById("conta-parcelado").value;
-    const numParcelas = document.getElementById("conta-num-parcelas").value;
-
-    await fetch(URL_GOOGLE_SHEETS, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: "addConta", descricao: desc, categoria: categoria, valorTotal: valorTotal,
-            primeiroVencimento: dataVenc, parcelado: parcelado, numParcelas: parcelado === "2" ? numParcelas : 1
-        })
-    });
+    const id = document.getElementById("conta-id").value;
+    
+    if (id) {
+        // Editar conta existente
+        const dadosEnvio = {
+            action: "updateConta", id: id,
+            descricao: document.getElementById("conta-desc").value,
+            categoria: document.getElementById("conta-categoria").value,
+            valor: document.getElementById("conta-valor").value || 0, // O valor não muda na edição
+            vencimento: document.getElementById("conta-data").value,
+            status: document.getElementById("conta-status").value
+        };
+        await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify(dadosEnvio) });
+    } else {
+        // Criar nova conta
+        const parcelado = document.getElementById("conta-parcelado").value;
+        const dadosEnvio = {
+            action: "addConta",
+            descricao: document.getElementById("conta-desc").value,
+            categoria: document.getElementById("conta-categoria").value,
+            valorTotal: document.getElementById("conta-valor").value,
+            primeiroVencimento: document.getElementById("conta-data").value,
+            parcelado: parcelado,
+            numParcelas: parcelado === "2" ? document.getElementById("conta-num-parcelas").value : 1,
+            status: document.getElementById("conta-status").value
+        };
+        await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify(dadosEnvio) });
+    }
+    
     fecharModal('modal-conta');
-    document.getElementById("form-conta").reset();
-    toggleParcelas(); 
     carregarDados();
 }
 
-function abrirModal(id) { document.getElementById(id).style.display = "flex"; }
+async function excluirConta(id) {
+    if (confirm("Excluir esta conta?")) {
+        await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify({ action: "deleteConta", id: id }) });
+        carregarDados();
+    }
+}
+
+// --- APOIO ---
 function fecharModal(id) { document.getElementById(id).style.display = "none"; }
-
-function toggleParcelas() {
-    const select = document.getElementById("conta-parcelado");
-    const divParcelas = document.getElementById("div-parcelas");
-    divParcelas.style.display = (select.value === "2") ? "block" : "none";
-}
-
-function formatarMoeda(valor) {
-    return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+function toggleParcelas() { document.getElementById("div-parcelas").style.display = document.getElementById("conta-parcelado").value === "2" ? "block" : "none"; }
+function formatarMoeda(valor) { return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
