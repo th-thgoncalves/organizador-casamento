@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador do Casamento</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Link para o ícone do app na aba do navegador -->
+    
+    <!-- Configurações do PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d95d79">
+    
+    <!-- Ícone da aba do navegador -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
 </head>
 <body>
@@ -121,5 +126,20 @@
 
     <!-- Carregando os scripts -->
     <script src="app.js"></script>
+    
+    <!-- Registro do Service Worker (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registrado com sucesso!');
+                    })
+                    .catch(err => {
+                        console.log('Falha no registro do ServiceWorker:', err);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
