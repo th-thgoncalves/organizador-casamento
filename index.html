@@ -5,139 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador do Casamento</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Configurações do PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#d95d79">
-    
-    <!-- Ícone da aba do navegador -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
 </head>
 <body>
-
-    <!-- CABEÇALHO -->
     <header>
         <h1>💍 Organizador do Casamento</h1>
         <div id="contagem-regressiva">Carregando...</div>
     </header>
 
-    <!-- BARRA DE PROGRESSO DO ORÇAMENTO -->
     <section id="resumo-financeiro">
-        <div class="card-resumo">
-            <span>Teto de Gastos</span>
-            <h2 id="teto-gastos">R$ 0,00</h2>
-        </div>
-        <div class="card-resumo">
-            <span>Total Comprometido</span>
-            <h2 id="total-comprometido" class="texto-vermelho">R$ 0,00</h2>
-        </div>
-        <div class="card-resumo">
-            <span>Saldo Disponível</span>
-            <h2 id="saldo-disponivel" class="texto-verde">R$ 0,00</h2>
-        </div>
-        <div class="barra-progresso-container">
-            <div id="barra-progresso" class="barra-progresso"></div>
-        </div>
+        <div class="card-resumo"><span>Teto de Gastos</span><h2 id="teto-gastos">R$ 0,00</h2></div>
+        <div class="card-resumo"><span>Total Comprometido</span><h2 id="total-comprometido" class="texto-vermelho">R$ 0,00</h2></div>
+        <div class="card-resumo"><span>Saldo Disponível</span><h2 id="saldo-disponivel" class="texto-verde">R$ 0,00</h2></div>
+        <div class="barra-progresso-container"><div id="barra-progresso" class="barra-progresso"></div></div>
     </section>
 
-    <!-- NAVEGAÇÃO (ABAS) -->
     <nav>
         <button class="aba-ativa" onclick="abrirAba('painel')">📊 Painel</button>
         <button onclick="abrirAba('categorias')">📝 Categorias</button>
         <button onclick="abrirAba('contas')">💸 Contas a Pagar</button>
     </nav>
 
-    <!-- CONTEÚDO DAS ABAS -->
     <main>
-        
-        <!-- ABA PAINEL -->
         <section id="aba-painel" class="aba-conteudo">
             <h2>Visão Geral</h2>
             <p>Aqui você verá um resumo de tudo. (Em construção!)</p>
-            <div id="lista-categorias-resumo"></div>
         </section>
 
-        <!-- ABA CATEGORIAS -->
         <section id="aba-categorias" class="aba-conteudo" style="display:none;">
             <h2>Nossas Categorias</h2>
-            <button class="btn-primario" onclick="abrirModal('modal-categoria')">+ Adicionar Categoria</button>
+            <button class="btn-primario" onclick="abrirModalCategoria()">+ Adicionar Categoria</button>
             <div id="lista-categorias"></div>
         </section>
 
-        <!-- ABA CONTAS A PAGAR -->
         <section id="aba-contas" class="aba-conteudo" style="display:none;">
             <h2>Contas a Pagar</h2>
-            <button class="btn-primario" onclick="abrirModal('modal-conta')">+ Adicionar Conta</button>
+            <button class="btn-primario" onclick="abrirModalConta()">+ Adicionar Conta</button>
             <div id="lista-contas"></div>
         </section>
-
     </main>
 
-    <!-- MODAIS (JANELAS FLUTUANTES) -->
-    
-    <!-- Modal de Categoria -->
+    <!-- Modal Categoria -->
     <div id="modal-categoria" class="modal">
         <div class="modal-conteudo">
             <span class="fechar" onclick="fecharModal('modal-categoria')">&times;</span>
-            <h3>Nova Categoria</h3>
+            <h3 id="titulo-modal-categoria">Nova Categoria</h3>
             <form id="form-categoria">
-                <label>Nome da Categoria (ex: Buffet)</label>
+                <input type="hidden" id="cat-id">
+                <label>Nome da Categoria</label>
                 <input type="text" id="cat-nome" required>
                 <label>Valor Estimado (R$)</label>
                 <input type="number" id="cat-estimado" step="0.01" required>
-                <button type="submit" class="btn-primario">Salvar</button>
+                <label>Valor Pago (R$)</label>
+                <input type="number" id="cat-pago" step="0.01" value="0">
+                <label>Status</label>
+                <select id="cat-status">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Cotando">Cotando</option>
+                    <option value="Fechado">Fechado / Contratado</option>
+                </select>
+                <button type="submit" class="btn-primario">Salvar Categoria</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Conta a Pagar -->
+    <!-- Modal Conta -->
     <div id="modal-conta" class="modal">
         <div class="modal-conteudo">
             <span class="fechar" onclick="fecharModal('modal-conta')">&times;</span>
-            <h3>Nova Conta a Pagar</h3>
+            <h3 id="titulo-modal-conta">Nova Conta a Pagar</h3>
             <form id="form-conta">
-                <label>Descrição (ex: Entrada Buffet)</label>
+                <input type="hidden" id="conta-id">
+                <label>Descrição</label>
                 <input type="text" id="conta-desc" required>
                 
                 <label>Categoria</label>
                 <select id="conta-categoria" required></select>
                 
-                <label>Valor Total (R$)</label>
-                <input type="number" id="conta-valor" step="0.01" required>
+                <div id="div-valor-total">
+                    <label>Valor Total (R$)</label>
+                    <input type="number" id="conta-valor" step="0.01" required>
+                </div>
                 
-                <label>Data do 1º Vencimento</label>
+                <label>Data do Vencimento</label>
                 <input type="date" id="conta-data" required>
                 
-                <label>É parcelado?</label>
-                <select id="conta-parcelado" onchange="toggleParcelas()">
-                    <option value="1">Não (À vista)</option>
-                    <option value="2">Sim</option>
-                </select>
-                
-                <div id="div-parcelas" style="display:none;">
-                    <label>Número de Parcelas</label>
-                    <input type="number" id="conta-num-parcelas" value="2" min="2">
+                <div id="div-parcelamento">
+                    <label>É parcelado?</label>
+                    <select id="conta-parcelado" onchange="toggleParcelas()">
+                        <option value="1">Não (À vista)</option>
+                        <option value="2">Sim</option>
+                    </select>
+                    <div id="div-parcelas" style="display:none;">
+                        <label>Número de Parcelas</label>
+                        <input type="number" id="conta-num-parcelas" value="2" min="2">
+                    </div>
                 </div>
+
+                <label>Status do Pagamento</label>
+                <select id="conta-status">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago">Já foi Pago</option>
+                </select>
 
                 <button type="submit" class="btn-primario">Salvar Conta</button>
             </form>
         </div>
     </div>
 
-    <!-- Carregando os scripts -->
     <script src="app.js"></script>
-    
-    <!-- Registro do Service Worker (PWA) -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registrado com sucesso!');
-                    })
-                    .catch(err => {
-                        console.log('Falha no registro do ServiceWorker:', err);
-                    });
+                navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
             });
         }
     </script>
