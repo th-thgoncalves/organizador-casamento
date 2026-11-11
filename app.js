@@ -1,4 +1,3 @@
-// COLE O SEU LINK AQUI (com as aspas no final!)
 const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
 
 let dadosApp = { config: {}, categorias: [], contas: [] };
@@ -6,15 +5,19 @@ let dadosApp = { config: {}, categorias: [], contas: [] };
 document.addEventListener("DOMContentLoaded", () => {
     iniciarContagemRegressiva();
     carregarDados();
-    document.getElementById("form-categoria").addEventListener("submit", salvarCategoria);
-    document.getElementById("form-conta").addEventListener("submit", salvarConta);
+    
+    const formCat = document.getElementById("form-categoria");
+    if (formCat) formCat.addEventListener("submit", salvarCategoria);
+    
+    const formConta = document.getElementById("form-conta");
+    if (formConta) formConta.addEventListener("submit", salvarConta);
 });
 
 function abrirAba(idAba) {
     document.querySelectorAll(".aba-conteudo").forEach(aba => aba.style.display = "none");
     document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("aba-ativa"));
     document.getElementById(`aba-${idAba}`).style.display = "block";
-    event.target.classList.add("aba-ativa");
+    if (event && event.target) event.target.classList.add("aba-ativa");
 }
 
 function iniciarContagemRegressiva() {
@@ -26,7 +29,8 @@ function iniciarContagemRegressiva() {
         const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
-        document.getElementById("contagem-regressiva").innerHTML = `Faltam ${dias}d ${horas}h ${minutos}m`;
+        const el = document.getElementById("contagem-regressiva");
+        if (el) el.innerHTML = `Faltam ${dias}d ${horas}h ${minutos}m`;
     }, 1000);
 }
 
@@ -35,80 +39,103 @@ async function carregarDados() {
         const resposta = await fetch(`${URL_GOOGLE_SHEETS}?action=getDados`);
         dadosApp = await resposta.json();
         atualizarTela();
-    } catch (erro) { console.error("Erro:", erro); }
+    } catch (erro) { console.error("Erro ao carregar dados:", erro); }
 }
 
 function atualizarTela() {
+    if (!dadosApp || !dadosApp.config) return;
+
     const teto = parseFloat(dadosApp.config.Teto_Gastos) || 0;
     let totalPago = 0;
-    if (dadosApp.categorias) dadosApp.categorias.forEach(cat => totalPago += parseFloat(cat.pago) || 0);
+    
+    if (dadosApp.categorias && Array.isArray(dadosApp.categorias)) {
+        dadosApp.categorias.forEach(cat => {
+            totalPago += parseFloat(cat.pago) || 0;
+        });
+    }
 
-    document.getElementById("teto-gastos").innerText = formatarMoeda(teto);
-    document.getElementById("total-comprometido").innerText = formatarMoeda(totalPago);
-    const saldo = teto - totalPago;
+    const elTeto = document.getElementById("teto-gastos");
+    const elTotal = document.getElementById("total-comprometido");
     const elSaldo = document.getElementById("saldo-disponivel");
-    elSaldo.innerText = formatarMoeda(saldo);
-    elSaldo.className = saldo < 0 ? "texto-vermelho" : "texto-verde";
+    const elBarra = document.getElementById("barra-progresso");
 
-    let porcentagem = (totalPago / teto) * 100;
-    if (porcentagem > 100) porcentagem = 100;
-    document.getElementById("barra-progresso").style.width = `${porcentagem}%`;
+    if (elTeto) elTeto.innerText = formatarMoeda(teto);
+    if (elTotal) elTotal.innerText = formatarMoeda(totalPago);
+    
+    const saldo = teto - totalPago;
+    if (elSaldo) {
+        elSaldo.innerText = formatarMoeda(saldo);
+        elSaldo.className = saldo < 0 ? "texto-vermelho" : "texto-verde";
+    }
+
+    if (elBarra) {
+        let porcentagem = (totalPago / teto) * 100;
+        if (porcentagem > 100) porcentagem = 100;
+        elBarra.style.width = `${porcentagem}%`;
+    }
 
     // RENDERIZAR CATEGORIAS
     const listaCat = document.getElementById("lista-categorias");
-    listaCat.innerHTML = ""; 
     const selectCat = document.getElementById("conta-categoria");
-    selectCat.innerHTML = "<option value=''>Selecione...</option>";
+    
+    if (listaCat) listaCat.innerHTML = ""; 
+    if (selectCat) selectCat.innerHTML = "<option value=''>Selecione...</option>";
 
-    if (dadosApp.categorias) {
+    if (dadosApp.categorias && Array.isArray(dadosApp.categorias)) {
         dadosApp.categorias.forEach(cat => {
-            listaCat.innerHTML += `
-                <div class="item-card">
-                    <div class="item-info">
-                        <h4>${cat.categoria}</h4>
-                        <p>Status: ${cat.status}</p>
-                    </div>
-                    <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
-                        <strong>Pago: ${formatarMoeda(cat.pago)}</strong>
-                        <span>Est: ${formatarMoeda(cat.estimado)}</span>
-                        <div>
-                            <button onclick="abrirModalCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
-                            <button onclick="excluirCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+            if (listaCat) {
+                listaCat.innerHTML += `
+                    <div class="item-card">
+                        <div class="item-info">
+                            <h4>${cat.categoria}</h4>
+                            <p>Status: ${cat.status}</p>
                         </div>
-                    </div>
-                </div>`;
-            selectCat.innerHTML += `<option value="${cat.categoria}">${cat.categoria}</option>`;
+                        <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <strong>Pago: ${formatarMoeda(cat.pago)}</strong>
+                            <span>Est: ${formatarMoeda(cat.estimado)}</span>
+                            <div>
+                                <button onclick="abrirModalCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
+                                <button onclick="excluirCategoria('${cat.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            if (selectCat) {
+                selectCat.innerHTML += `<option value="${cat.categoria}">${cat.categoria}</option>`;
+            }
         });
     }
 
     // RENDERIZAR CONTAS
     const listaContas = document.getElementById("lista-contas");
-    listaContas.innerHTML = "";
-    if (dadosApp.contas) {
-        dadosApp.contas.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento)).forEach(conta => {
-            let dataFormatada = "Data Inválida";
-            if(conta.vencimento) {
-                const dataObj = new Date(conta.vencimento);
-                dataFormatada = new Date(dataObj.getTime() + dataObj.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-            }
-            const corBorda = conta.status === "Pago" ? "#2ecc71" : "#f39c12";
-            
-            listaContas.innerHTML += `
-                <div class="item-card" style="border-left-color: ${corBorda};">
-                    <div class="item-info">
-                        <h4>${conta.desc}</h4>
-                        <p>Vence: ${dataFormatada} | Parcela ${conta.parcelaAtual}/${conta.totalParcelas}</p>
-                    </div>
-                    <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
-                        <strong>${formatarMoeda(conta.valor)}</strong>
-                        <span style="color: ${corBorda}; font-weight: bold;">${conta.status}</span>
-                        <div>
-                            <button onclick="abrirModalConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
-                            <button onclick="excluirConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+    if (listaContas) {
+        listaContas.innerHTML = "";
+        if (dadosApp.contas && Array.isArray(dadosApp.contas)) {
+            dadosApp.contas.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento)).forEach(conta => {
+                let dataFormatada = "Data Inválida";
+                if(conta.vencimento) {
+                    const dataObj = new Date(conta.vencimento);
+                    dataFormatada = new Date(dataObj.getTime() + dataObj.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
+                }
+                const corBorda = conta.status === "Pago" ? "#2ecc71" : "#f39c12";
+                
+                listaContas.innerHTML += `
+                    <div class="item-card" style="border-left-color: ${corBorda};">
+                        <div class="item-info">
+                            <h4>${conta.desc}</h4>
+                            <p>Vence: ${dataFormatada} | Parcela ${conta.parcelaAtual}/${conta.totalParcelas}</p>
                         </div>
-                    </div>
-                </div>`;
-        });
+                        <div class="item-valores" style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <strong>${formatarMoeda(conta.valor)}</strong>
+                            <span style="color: ${corBorda}; font-weight: bold;">${conta.status}</span>
+                            <div>
+                                <button onclick="abrirModalConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">✏️</button>
+                                <button onclick="excluirConta('${conta.id}')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
     }
 }
 
@@ -162,7 +189,6 @@ function abrirModalConta(id = null) {
     document.getElementById("conta-id").value = "";
     document.getElementById("titulo-modal-conta").innerText = "Nova Conta a Pagar";
     
-    // Mostra opções de parcelamento e valor total (só para contas novas)
     document.getElementById("div-valor-total").style.display = "block";
     document.getElementById("div-parcelamento").style.display = "block";
     document.getElementById("conta-valor").required = true;
@@ -177,7 +203,6 @@ function abrirModalConta(id = null) {
             document.getElementById("conta-data").value = conta.vencimento;
             document.getElementById("conta-status").value = conta.status;
             
-            // Esconde opções que não devem ser editadas numa parcela específica
             document.getElementById("div-valor-total").style.display = "none";
             document.getElementById("div-parcelamento").style.display = "none";
             document.getElementById("conta-valor").required = false;
@@ -191,18 +216,16 @@ async function salvarConta(e) {
     const id = document.getElementById("conta-id").value;
     
     if (id) {
-        // Editar conta existente
         const dadosEnvio = {
             action: "updateConta", id: id,
             descricao: document.getElementById("conta-desc").value,
             categoria: document.getElementById("conta-categoria").value,
-            valor: document.getElementById("conta-valor").value || 0, // O valor não muda na edição
+            valor: document.getElementById("conta-valor").value || 0,
             vencimento: document.getElementById("conta-data").value,
             status: document.getElementById("conta-status").value
         };
         await fetch(URL_GOOGLE_SHEETS, { method: 'POST', body: JSON.stringify(dadosEnvio) });
     } else {
-        // Criar nova conta
         const parcelado = document.getElementById("conta-parcelado").value;
         const dadosEnvio = {
             action: "addConta",
@@ -231,4 +254,6 @@ async function excluirConta(id) {
 // --- APOIO ---
 function fecharModal(id) { document.getElementById(id).style.display = "none"; }
 function toggleParcelas() { document.getElementById("div-parcelas").style.display = document.getElementById("conta-parcelado").value === "2" ? "block" : "none"; }
-function formatarMoeda(valor) { return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function formatarMoeda(valor) { return parseFloat(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+
