@@ -2,7 +2,7 @@
 // CONFIGURAÇÃO INICIAL (COLE SEU LINK AQUI!)
 // ==========================================
 // Cole o link do seu App da Web do Google Apps Script entre as aspas abaixo.
-// Exemplo: const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/SEU_ID/exec";
+// Exemplo: const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
 const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
 
 // Variáveis globais para guardar os dados carregados
