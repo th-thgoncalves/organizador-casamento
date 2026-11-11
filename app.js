@@ -1,6 +1,7 @@
 const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbz_wWUEkTxmppUtfVuY1_SaOkEzpa_6YXbChYyRyBGrz-Y_ELTJjCEb9_bdXFHia-xq/exec";
 
 let dadosApp = { config: {}, categorias: [], contas: [] };
+let valorContaOriginal = 0; // Variável nova para guardar o valor da conta na edição
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarContagemRegressiva();
@@ -25,12 +26,21 @@ function iniciarContagemRegressiva() {
     const intervalo = setInterval(() => {
         const agora = new Date().getTime();
         const diferenca = dataCasamento - agora;
-        if (diferenca < 0) { clearInterval(intervalo); return; }
+        
+        if (diferenca < 0) { 
+            clearInterval(intervalo); 
+            const el = document.getElementById("contagem-regressiva");
+            if (el) el.innerHTML = "O grande dia chegou! 🎉";
+            return; 
+        }
+        
         const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diferenca % (1000 * 60)) / 1000); // NOVO: Segundos
+        
         const el = document.getElementById("contagem-regressiva");
-        if (el) el.innerHTML = `Faltam ${dias}d ${horas}h ${minutos}m`;
+        if (el) el.innerHTML = `Faltam ${dias}d ${horas}h ${minutos}m ${segundos}s para o grande dia!`;
     }, 1000);
 }
 
@@ -188,6 +198,7 @@ function abrirModalConta(id = null) {
     document.getElementById("form-conta").reset();
     document.getElementById("conta-id").value = "";
     document.getElementById("titulo-modal-conta").innerText = "Nova Conta a Pagar";
+    valorContaOriginal = 0; // Reseta o valor original
     
     document.getElementById("div-valor-total").style.display = "block";
     document.getElementById("div-parcelamento").style.display = "block";
@@ -203,6 +214,8 @@ function abrirModalConta(id = null) {
             document.getElementById("conta-data").value = conta.vencimento;
             document.getElementById("conta-status").value = conta.status;
             
+            valorContaOriginal = conta.valor; // GUARDA O VALOR ORIGINAL AQUI!
+            
             document.getElementById("div-valor-total").style.display = "none";
             document.getElementById("div-parcelamento").style.display = "none";
             document.getElementById("conta-valor").required = false;
@@ -216,11 +229,12 @@ async function salvarConta(e) {
     const id = document.getElementById("conta-id").value;
     
     if (id) {
+        // CORREÇÃO AQUI: Envia o valor original em vez de 0
         const dadosEnvio = {
             action: "updateConta", id: id,
             descricao: document.getElementById("conta-desc").value,
             categoria: document.getElementById("conta-categoria").value,
-            valor: document.getElementById("conta-valor").value || 0,
+            valor: valorContaOriginal, 
             vencimento: document.getElementById("conta-data").value,
             status: document.getElementById("conta-status").value
         };
@@ -255,5 +269,3 @@ async function excluirConta(id) {
 function fecharModal(id) { document.getElementById(id).style.display = "none"; }
 function toggleParcelas() { document.getElementById("div-parcelas").style.display = document.getElementById("conta-parcelado").value === "2" ? "block" : "none"; }
 function formatarMoeda(valor) { return parseFloat(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-
-
