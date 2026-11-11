@@ -1,0 +1,17 @@
+{
+  "name": "Organizador do Casamento",
+  "short_name": "Casamento",
+  "description": "App para organizar o orçamento e os preparativos do casamento.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fbf8f9",
+  "theme_color": "#d95d79",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3003/3003148.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
