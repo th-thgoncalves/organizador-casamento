@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador do Casamento</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Link para o ícone do app na aba do navegador -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
+</head>
+<body>
+
+    <!-- CABEÇALHO -->
+    <header>
+        <h1>💍 Organizador do Casamento</h1>
+        <div id="contagem-regressiva">Carregando...</div>
+    </header>
+
+    <!-- BARRA DE PROGRESSO DO ORÇAMENTO -->
+    <section id="resumo-financeiro">
+        <div class="card-resumo">
+            <span>Teto de Gastos</span>
+            <h2 id="teto-gastos">R$ 0,00</h2>
+        </div>
+        <div class="card-resumo">
+            <span>Total Comprometido</span>
+            <h2 id="total-comprometido" class="texto-vermelho">R$ 0,00</h2>
+        </div>
+        <div class="card-resumo">
+            <span>Saldo Disponível</span>
+            <h2 id="saldo-disponivel" class="texto-verde">R$ 0,00</h2>
+        </div>
+        <div class="barra-progresso-container">
+            <div id="barra-progresso" class="barra-progresso"></div>
+        </div>
+    </section>
+
+    <!-- NAVEGAÇÃO (ABAS) -->
+    <nav>
+        <button class="aba-ativa" onclick="abrirAba('painel')">📊 Painel</button>
+        <button onclick="abrirAba('categorias')">📝 Categorias</button>
+        <button onclick="abrirAba('contas')">💸 Contas a Pagar</button>
+    </nav>
+
+    <!-- CONTEÚDO DAS ABAS -->
+    <main>
+        
+        <!-- ABA PAINEL -->
+        <section id="aba-painel" class="aba-conteudo">
+            <h2>Visão Geral</h2>
+            <p>Aqui você verá um resumo de tudo. (Em construção!)</p>
+            <div id="lista-categorias-resumo"></div>
+        </section>
+
+        <!-- ABA CATEGORIAS -->
+        <section id="aba-categorias" class="aba-conteudo" style="display:none;">
+            <h2>Nossas Categorias</h2>
+            <button class="btn-primario" onclick="abrirModal('modal-categoria')">+ Adicionar Categoria</button>
+            <div id="lista-categorias"></div>
+        </section>
+
+        <!-- ABA CONTAS A PAGAR -->
+        <section id="aba-contas" class="aba-conteudo" style="display:none;">
+            <h2>Contas a Pagar</h2>
+            <button class="btn-primario" onclick="abrirModal('modal-conta')">+ Adicionar Conta</button>
+            <div id="lista-contas"></div>
+        </section>
+
+    </main>
+
+    <!-- MODAIS (JANELAS FLUTUANTES) -->
+    
+    <!-- Modal de Categoria -->
+    <div id="modal-categoria" class="modal">
+        <div class="modal-conteudo">
+            <span class="fechar" onclick="fecharModal('modal-categoria')">&times;</span>
+            <h3>Nova Categoria</h3>
+            <form id="form-categoria">
+                <label>Nome da Categoria (ex: Buffet)</label>
+                <input type="text" id="cat-nome" required>
+                <label>Valor Estimado (R$)</label>
+                <input type="number" id="cat-estimado" step="0.01" required>
+                <button type="submit" class="btn-primario">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Conta a Pagar -->
+    <div id="modal-conta" class="modal">
+        <div class="modal-conteudo">
+            <span class="fechar" onclick="fecharModal('modal-conta')">&times;</span>
+            <h3>Nova Conta a Pagar</h3>
+            <form id="form-conta">
+                <label>Descrição (ex: Entrada Buffet)</label>
+                <input type="text" id="conta-desc" required>
+                
+                <label>Categoria</label>
+                <select id="conta-categoria" required></select>
+                
+                <label>Valor Total (R$)</label>
+                <input type="number" id="conta-valor" step="0.01" required>
+                
+                <label>Data do 1º Vencimento</label>
+                <input type="date" id="conta-data" required>
+                
+                <label>É parcelado?</label>
+                <select id="conta-parcelado" onchange="toggleParcelas()">
+                    <option value="1">Não (À vista)</option>
+                    <option value="2">Sim</option>
+                </select>
+                
+                <div id="div-parcelas" style="display:none;">
+                    <label>Número de Parcelas</label>
+                    <input type="number" id="conta-num-parcelas" value="2" min="2">
+                </div>
+
+                <button type="submit" class="btn-primario">Salvar Conta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Carregando os scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
